@@ -7,7 +7,6 @@
 #SBATCH --cpus-per-task=16   # number of MPI ranks per CPU socket
 #SBATCH --mem=20G
 
-
 #mem-per-cpu=1G
 module load aocc/5.0.0
 module load aocl/5.0.0

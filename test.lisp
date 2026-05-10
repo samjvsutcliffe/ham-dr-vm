@@ -29,6 +29,13 @@
   (format t "Changing class ~A~%" (gethash *solver* *solver-hash*))
   (change-class *sim* (gethash *solver* *solver-hash*))
 
+  (cl-mpm:iterate-over-mps
+   (cl-mpm:sim-mps *sim*)
+   (lambda (mp)
+     (change-class mp 'cl-mpm/particle::particle-vm)))
+
+  (setf lparallel:*debug-tasks-p* nil)
+
   (setf (cl-mpm/aggregate::sim-enable-aggregate *sim*) *agg*
       (cl-mpm::sim-ghost-factor *sim*) nil
       (cl-mpm::sim-enable-fbar *sim*) nil)
@@ -36,19 +43,23 @@
   (setf (cl-mpm::sim-gravity *sim*) -10d0)
 
   (format t "Starting test~%")
-  (let ((start (get-internal-real-time)))
+  (let ((start (get-internal-real-time))
+        (output-dir (merge-pathnames (format nil "./data/output-~A-~a_~f_~d_~A/" *solver* *lstps* *refine* *mps* *agg*))))
 
+    (cl-mpm/setup::set-mass-filter *sim* *density* :proportion 1d-9)
+
+    (uiop:ensure-all-directories-exist (list output-dir))
     (cl-mpm/dynamic-relaxation::run-load-control
      *sim*
-     :output-dir (merge-pathnames (format nil "./data/output-~A-~a_~f_~d_~A/" *solver* *lstps* *refine* *mps* *agg*))
+     :output-dir output-dir
      :load-steps *lstps*
-     :substeps (round (* 25 (expt 2 *refine*)))
+     :substeps (round (* 25 (expt 1 *refine*)))
      :plotter (lambda (sim))
      :damping (sqrt 2d0)
      :save-vtk-dr nil
      :save-vtk-loadstep t
-     :conv-steps 1000
-     :dt-scale 1.8d0
+     :conv-steps 100
+     :dt-scale 1d0
      :criteria 1d-9)
 
     (let* ((end (get-internal-real-time))
