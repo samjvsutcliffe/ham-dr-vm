@@ -32,7 +32,7 @@
   (cl-mpm:iterate-over-mps
    (cl-mpm:sim-mps *sim*)
    (lambda (mp)
-     (change-class mp 'cl-mpm/particle::particle-vm)))
+     (change-class mp 'cl-mpm/particle::particle-vm-implicit)))
 
   (setf lparallel:*debug-tasks-p* nil)
 
@@ -44,28 +44,30 @@
 
   (format t "Starting test~%")
   (let ((start (get-internal-real-time))
-        (output-dir (merge-pathnames (format nil "./data/output-~A-~a_~f_~d_~A/" *solver* *lstps* *refine* *mps* *agg*))))
+        (output-dir (merge-pathnames (format nil "./data/output-~A-~a_~f_~d_~A/" *solver* *lstps* *refine* *mps* *agg*)))
+        (dt 0d0) 
+         (substeps (if (string= *solver* "DR")
+               (round (* 50 (expt *refine* 1)))
+               1)) )
 
-    (cl-mpm/setup::set-mass-filter *sim* *density* :proportion 1d-9)
+    (cl-mpm/setup::set-mass-filter *sim* *density* :proportion 1d-15)
 
     (uiop:ensure-all-directories-exist (list output-dir))
-    (cl-mpm/dynamic-relaxation::run-load-control
-     *sim*
-     :output-dir output-dir
-     :load-steps *lstps*
-     :substeps (round (* 25 (expt 1 *refine*)))
-     :plotter (lambda (sim))
-     :damping (sqrt 2d0)
-     :save-vtk-dr nil
-     :save-vtk-loadstep t
-     :conv-steps 100
-     :dt-scale 1d0
-     :criteria 1d-9)
+    (setf dt 
+          (cl-mpm/dynamic-relaxation::run-load-control-timed
+               *sim*
+               :output-dir output-dir
+               :load-steps *lstps*
+               :substeps substeps
+               :plotter (lambda (sim))
+               :damping (sqrt 2d0)
+               :save-vtk-dr nil
+               :save-vtk-loadstep nil
+               :conv-steps 500
+               :dt-scale 1d0;(/ 1.1d0 2d0)
+               :criteria 1d-9))
 
-    (let* ((end (get-internal-real-time))
-           (units internal-time-units-per-second)
-           (dt (/ (- end start) units))
-           (disp (compute-max-extent *sim*)))
+    (let* ( (disp (compute-max-extent *sim*)))
       (with-open-file (stream  *data-file* :direction :output :if-exists :append)
         (format stream "~A,~D,~E,~D,~D,~A,~E,~E~%"
                 *solver*

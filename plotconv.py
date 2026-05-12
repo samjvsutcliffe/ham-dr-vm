@@ -46,6 +46,7 @@ fig = plt.figure(figsize=(width,height))
 files = ["data_MESHREFINE.csv"]
 
 for f in files: 
+    print(df)
     df = pd.read_csv(f)
     refine = df["refine"].values
     disp = df["disp"].values-8

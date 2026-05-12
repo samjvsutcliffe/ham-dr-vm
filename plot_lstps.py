@@ -46,17 +46,18 @@ fig = plt.figure(figsize=(width,height))
 files = ["data_LSTP.csv"]
 
 for f in files: 
-    df = pd.read_csv(f)
-    df = df.sort_values("lstps")
-    lstps = df["lstps"].values
-    disp = df["disp"].values-8
-    time = df["time"].values
-    plt.plot(lstps,disp,label=f)
-#plt.xscale("log")
-#plt.yscale("log")
+    df_0 = pd.read_csv(f)
+    for solver,row in df_0.groupby("solver"):      
+        df = row.sort_values("lstps")
+        lstps = df["lstps"].values
+        error = df["error"].values
+        time = df["time"].values
+        plt.plot(lstps,error,label=solver)
+plt.xscale("log")
+plt.yscale("log")
 plt.legend()
 plt.xlabel("Loadstep count")
-plt.ylabel("Run-out displacement")
+plt.ylabel("Normalised stress error")
 
 fig = plt.figure(figsize=(width,height))
 for f in files:
