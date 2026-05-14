@@ -95,6 +95,9 @@
     (format stream "solver,threads,refine,lstps,mps,agg,time,disp~%"))
 (format t "Testing thread count: ~D ~%" *threads*)
 (format t "Testing refine: ~E ~%" *refine*)
-(test)
+(dotimes (i 1)
+  (ignore-errors
+    (test))
+  (sb-ext:gc :full t))
 (cl-mpm/utils::kill-workers)
 (sb-ext:gc :full t)
