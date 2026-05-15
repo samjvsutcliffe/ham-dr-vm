@@ -15,7 +15,7 @@
 (defparameter *lstps* (let ((var (uiop:getenv "LSTPS"))) (parse-integer (if var var "1"))))
 (defparameter *solver* (let ((var (uiop:getenv "SOLVER"))) (if var var "DR")))
 (defparameter *agg* (let ((var (uiop:getenv "AGG"))) (string= (if var var "TRUE") "TRUE")))
-(defparameter *solver-hash* (serapeum:dict "DR" 'cl-mpm/dynamic-relaxation::mpm-sim-quasi-static "IMPLICIT" 'cl-mpm/implicit::mpm-sim-implicit))
+(defparameter *solver-hash* (serapeum:dict "DR" 'cl-mpm/dynamic-relaxation::mpm-sim-dr-paper "IMPLICIT" 'cl-mpm/implicit::mpm-sim-implicit))
 
 (format t "Running test with settings name ~A refine ~A lstps ~A mps ~A threads ~A solver ~A agg ~A~%" *name* *refine* *lstps* *mps* *threads* *solver* *agg*)
 (cl-mpm/utils::set-workers *threads*)
@@ -41,10 +41,10 @@
       (cl-mpm::sim-enable-fbar *sim*) nil)
 
   (setf (cl-mpm::sim-gravity *sim*) -10d0)
+  (sb-ext:gc :full t)
 
   (format t "Starting test~%")
-  (let ((start (get-internal-real-time))
-        (output-dir (merge-pathnames (format nil "./data/output-~A-~a_~f_~d_~A/" *solver* *lstps* *refine* *mps* *agg*)))
+  (let ((output-dir (merge-pathnames (format nil "./data/output-~A-~a_~f_~d_~A/" *solver* *lstps* *refine* *mps* *agg*)))
         (dt 0d0) 
          (substeps (if (string= *solver* "DR")
                (round (* 50 (expt *refine* 1)))
